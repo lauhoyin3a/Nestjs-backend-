@@ -1,0 +1,567 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id Int @id @default(autoincrement())
+
+  email String @unique
+  phone Int    @unique
+  hash  String
+
+  verification_code Int      @default(1213)
+  verify_email      Boolean  @default(false)
+  is_active         Boolean  @default(false)
+  is_blocked        Boolean  @default(false)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  role              Role?
+  user_profile      User_profile?
+  articles          Article[]
+  handclap          Handclap[]
+  course            Course[]
+  works             Works[]
+  review            Review[]
+  post              Post[]
+  order             Order[]
+  redeem_coupon     Redeem_Coupon[]
+  mentor_service    Mentor_Service[]
+  shopping_Cart     Shopping_Cart[]
+  Bookmark          Bookmark[]
+  Mentor_Profile    Mentor_Profile?
+  Mentor_Experience Mentor_Experience[]
+  Mentor_Skill      Mentor_Skill[]
+  Mentor_Schedule   Mentor_Schedule[]
+  Mentor_Booked     Mentor_Booked[]
+
+  @@map("users")
+}
+
+model User_profile {
+  id              Int             @id @default(autoincrement())
+  owner           User            @relation(fields: [user_id], references: [id])
+  user_id         Int             @unique
+  photo           String
+  last_name       String
+  first_name      String
+  last_name_chi   String
+  first_name_chi  String
+  gender          Gender
+  birthday        String
+  occupation      Occupation
+  education_level Education_level
+  cv              String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Role {
+  id        Int       @id @default(autoincrement())
+  owner     User      @relation(fields: [user_id], references: [id])
+  user_id   Int       @unique
+  is_mentor Is_mentor @default(false)
+  is_admin  Boolean   @default(false)
+  is_editor Boolean   @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Article {
+  id          Int        @id @default(autoincrement())
+  owner       User       @relation(fields: [owner_id], references: [id])
+  owner_id    Int
+  status      Status     @default(pending)
+  title       String
+  cover_image String
+  content     String
+  category    Category   @relation(fields: [category_id], references: [id])
+  category_id Int
+  handclap    Handclap[]
+
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  Bookmark  Bookmark[]
+}
+
+model Bookmark {
+  id         Int      @id @default(autoincrement())
+  user       User     @relation(fields: [user_id], references: [id])
+  user_id    Int
+  course     Course?  @relation(fields: [course_id], references: [id])
+  course_id  Int?
+  article    Article? @relation(fields: [article_id], references: [id])
+  article_id Int?
+  is_active  Boolean  @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Category {
+  id          Int    @id @default(autoincrement())
+  name        String
+  description String
+  cover_image String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  article                Article[]
+  categories_courses_map Categories_Courses_Map[]
+}
+
+model Handclap {
+  id         Int      @id @default(autoincrement())
+  user       User     @relation(fields: [user_id], references: [id])
+  user_id    Int
+  article    Article  @relation(fields: [article_id], references: [id])
+  article_id Int
+  count      Int
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model Categories_Courses_Map {
+  id Int @id @default(autoincrement())
+
+  categories   Category @relation(fields: [categoriesId], references: [id])
+  categoriesId Int
+  course       Course   @relation(fields: [course_id], references: [id])
+  course_id    Int
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Course {
+  id       Int  @id @default(autoincrement())
+  owner    User @relation(fields: [owner_id], references: [id])
+  owner_id Int
+
+  status                 Status
+  name                   String
+  price                  Int
+  total_duration         Int
+  cover_image            String
+  intro_video            String
+  short_description      String
+  long_description       String
+  start_at               DateTime
+  createdAt              DateTime                 @default(now())
+  updatedAt              DateTime                 @updatedAt
+  chapter                Chapter[]
+  categories_courses_map Categories_Courses_Map[]
+  review                 Review[]
+  post                   Post[]
+  order_course           Order_Course[]
+  shopping_Cart          Shopping_Cart[]
+  bookmark               Bookmark[]
+}
+
+model Chapter {
+  id        Int       @id @default(autoincrement())
+  course    Course    @relation(fields: [course_id], references: [id])
+  course_id Int
+  name      String
+  order     Int
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  section   Section[]
+}
+
+model Coupon {
+  id              Int             @id @default(autoincrement())
+  promocode       String          @unique
+  name            String
+  discount_amount Int
+  quantity        Int
+  start_at        DateTime
+  end_at          DateTime
+  is_active       Boolean
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  Redeem_Coupon   Redeem_Coupon[]
+}
+
+model Redeem_Coupon {
+  id        Int      @id @default(autoincrement())
+  user      User     @relation(fields: [user_id], references: [id])
+  user_id   Int
+  coupon    Coupon   @relation(fields: [coupon_id], references: [id])
+  coupon_id Int
+  is_used   Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  order     Order?
+}
+
+model Review {
+  id            Int      @id @default(autoincrement())
+  user          User     @relation(fields: [user_id], references: [id])
+  user_id       Int
+  course        Course   @relation(fields: [course_id], references: [id])
+  course_id     Int
+  content       String
+  course_rating Int
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model Mentor_Booked {
+  id               Int           @id @default(autoincrement())
+  user             User          @relation(fields: [user_id], references: [id])
+  user_id          Int
+  timeslot         Timeslot      @relation(fields: [timeslot_id], references: [id])
+  timeslot_id      Int           @unique
+  date             DateTime?
+  order_booking    Order_Booking @relation(fields: [order_booking_id], references: [id])
+  order_booking_id Int           @unique
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+}
+
+model Mentor_Experience {
+  id          Int             @id @default(autoincrement())
+  user        User            @relation(fields: [user_id], references: [id])
+  user_id     Int
+  type        Experience_Type
+  title_name  String?
+  org_name    String?
+  start_year  String?
+  end_year    String?
+  start_month String?
+  end_month   String?
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+}
+
+model Mentor_Service {
+  id            Int             @id @default(autoincrement())
+  user          User            @relation(fields: [user_id], references: [id])
+  user_id       Int
+  service       Service         @relation(fields: [service_id], references: [id])
+  service_id    Int             @unique
+  duration      Duration
+  price         Int
+  is_active     Boolean         @default(true)
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  order_Booking Order_Booking[]
+}
+
+model Mentor_Schedule {
+  id          Int      @id @default(autoincrement())
+  user        User     @relation(fields: [user_id], references: [id])
+  user_id     Int
+  weekdays    Weekdays @relation(fields: [weekdays_id], references: [id])
+  weekdays_id Int      @unique
+  start_dt    DateTime
+  end_dt      DateTime
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Mentor_Skill {
+  id        Int      @id @default(autoincrement())
+  user      User     @relation(fields: [user_id], references: [id])
+  user_id   Int
+  skill     Skill    @relation(fields: [skill_id], references: [id])
+  skill_id  Int      @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Mentor_Profile {
+  id          Int     @id @default(autoincrement())
+  user        User    @relation(fields: [user_id], references: [id])
+  user_id     Int     @unique
+  title       String
+  description String
+  website     String?
+  linkedin    String?
+  facebook    String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Order {
+  id                 Int                 @id @default(autoincrement())
+  user               User                @relation(fields: [user_id], references: [id])
+  user_id            Int
+  status             Order_Status
+  type               Order_type
+  payment_method     Payment_Method
+  redeem_coupon      Redeem_Coupon?      @relation(fields: [redeem_coupon_id], references: [id])
+  redeem_coupon_id   Int                 @unique
+  total_amount       Int
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  order_course       Order_Course[]
+  Order_Booking      Order_Booking?
+  Order_Subscription Order_Subscription?
+}
+
+model Order_Booking {
+  id                Int            @id @default(autoincrement())
+  order             Order          @relation(fields: [order_id], references: [id])
+  order_id          Int            @unique
+  status            Booking_Status @default(pending)
+  mentor_service    Mentor_Service @relation(fields: [mentor_service_id], references: [id])
+  mentor_service_id Int
+  service_duration  Int
+  service_price     Int
+  start_dt          DateTime
+  end_dt            DateTime
+  zoom_link         String?
+
+  file_path     String?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  Mentor_Booked Mentor_Booked?
+}
+
+model Order_Course {
+  id Int @id @default(autoincrement())
+
+  order         Order  @relation(fields: [order_id], references: [id])
+  order_id      Int
+  course        Course @relation(fields: [course_id], references: [id])
+  course_id     Int
+  course_status String
+  course_name   String
+  course_price  Int
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Order_Subscription {
+  id                 Int           @id @default(autoincrement())
+  status             Order_Status2
+  order              Order         @relation(fields: [order_id], references: [id])
+  order_id           Int           @unique
+  subscription       Subscription  @relation(fields: [subscription_id], references: [id])
+  subscription_id    Int
+  subscription_name  String
+  subscription_price Int
+  end_dt             DateTime?
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+}
+
+model Post {
+  id        Int      @id @default(autoincrement())
+  user      User     @relation(fields: [user_id], references: [id])
+  user_id   Int
+  course    Course   @relation(fields: [course_id], references: [id])
+  course_id Int
+  content   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Shopping_Cart {
+  id        Int      @id @default(autoincrement())
+  user      User     @relation(fields: [user_id], references: [id])
+  user_id   Int
+  course    Course   @relation(fields: [course_id], references: [id])
+  course_id Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Service {
+  id             Int             @id @default(autoincrement())
+  name           String
+  description    String
+  mentor_service Mentor_Service?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+}
+
+model Section {
+  id         Int      @id @default(autoincrement())
+  chapter    Chapter  @relation(fields: [chapter_id], references: [id])
+  chapter_id Int
+  name       String
+  type       Type
+  content    String
+  order      Int
+  is_locked  Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  works      Works?
+}
+
+model Skill {
+  id           Int           @id @default(autoincrement())
+  name         String
+  description  String
+  mentor_skill Mentor_Skill?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+}
+
+model Subscription {
+  id                 Int                  @id @default(autoincrement())
+  name               String
+  content            String
+  price              Float
+  period             Period
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+  order_subscription Order_Subscription[]
+}
+
+model Timeslot {
+  id            Int            @id @default(autoincrement())
+  time          Int
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  mentor_booked Mentor_Booked?
+}
+
+model Weekdays {
+  id              Int              @id @default(autoincrement())
+  weekday         Weekday
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  mentor_schedule Mentor_Schedule?
+}
+
+model Works {
+  id         Int      @id @default(autoincrement())
+  user       User     @relation(fields: [user_id], references: [id])
+  user_id    Int
+  section    Section  @relation(fields: [section_id], references: [id])
+  section_id Int      @unique
+  work_image String
+  content    String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+enum Duration {
+  half
+  quar  @map("45")
+  sixty @map("60")
+}
+
+enum Experience_Type {
+  work
+  education
+}
+
+enum Is_mentor {
+  false
+  pending
+  rejected
+  on_board
+  off_board
+}
+
+enum Gender {
+  male
+  female
+}
+
+enum Occupation {
+  Manufacturing
+  Electricity                                        @map("Electricity and Gas Supply: Electricity and Gas Supply")
+  Environment_Protection                             @map("Environment Protection")
+  Construction
+  Import_Export_WholeSale_and_Retail                 @map("Import/Export, WholeSale and Retail")
+  Transportation_Storage_Postal_and_Courier_Services @map("Transportation, Storage, Postal and Courier Services")
+  Accommodation_and_Food_Services                    @map("Accommodation and Food Services")
+  Information_and_Communications                     @map("Information and Communications")
+  Financial_and_Insurance                            @map("Financial and Insurance")
+  Real_Estate                                        @map("Real Estate")
+  Professional_Scientific_and_Technical              @map("Professional, Scientific and Technical")
+  Administrative_and_Support_Services                @map("Administrative and Support Services")
+  Public_Administration                              @map("Public Administration")
+  Medical_and_Health                                 @map("Medical and Health")
+  Education
+  Social_Work                                        @map("Social Work")
+  Art_Entertainment_and_recreation                   @map("Art, Entertainment and Recreation")
+  Other
+}
+
+enum Order_Status {
+  pending
+  succesed
+  returned
+  cancelled
+}
+
+enum Order_Status2 {
+  progress
+  cancel
+}
+
+enum Order_type {
+  booking
+  subscription
+  course
+}
+
+enum Payment_Method {
+  visa
+  master
+  alipay
+  octopus
+}
+
+enum Education_level {
+  Primary_School   @map("Primary School")
+  Secondary_School @map("Secondary School  ")
+  Higher_Diploma   @map("Higher-Diploma")
+  Associate_Degree @map("Associate Degree")
+  Bachelor_Degree  @map("Bachelor Degree")
+  Master_Degree    @map("Master Degree")
+  PhD
+}
+
+enum Period {
+  month
+  year
+}
+
+enum Booking_Status {
+  pending
+  accept
+  reject
+  completed
+}
+
+enum Status {
+  pending
+  rejected
+  on_board
+  off_board
+}
+
+enum Type {
+  video
+  text
+}
+
+enum Weekday {
+  Mon
+  Tue
+  Wed
+  Thu
+  Fri
+  Sat
+  Sun
+}

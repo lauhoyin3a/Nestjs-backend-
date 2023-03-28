@@ -1,0 +1,6 @@
+private authService: AuthService -> authService: AuthService + this.authService=authService
+
+provider: handling the business logic
+controllers: api
+
+pepes
